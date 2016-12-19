@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <style type="text/css">
+            html, body {
+                margin: 0;
+                padding: 0;
+                font-size: 13px;
+                font-family: Helvetica, Arial, sans-serif;
+                line-height: 1;
+                text-align: center;
+            }
+            table {
+                border-collapse: collapse;
+                border-spacing: none;
+            }
+            p {
+                margin: 0;
+            }
+            h1 {
+                color: black;
+                font-size: 30px;
+            }
+            button {
+                display: block;
+                width: 200px;
+                margin: 20px auto;
+                font-weight: bold;
+                padding: 30px;
+                font-size: 20px;
+                color: #999;
+            }
+            img {
+                border: 1px solid #ddd;
+            }
+        </style>
+        <!-- <link href="" rel="stylesheet"> -->
+    </head>
+    <body>
+
+        <button disabled>boop</button>
+        <h1>Loading...</h1>
+        <img id="yay" src="loading.gif" data-filename="loading.gif" alt="" />
+
+
+        <script src="underscore-min.js"></script>
+        <script src="jquery-1.11.0.min.js"></script>
+        <script src="Dropbox-sdk.min.js"></script>
+        <script type="text/javascript">
+
+            var configuration = {
+                "access_token": '',
+                "dropbox_folder": '',
+            };
+
+            // set up a new dropbox thing
+            var dbx = new Dropbox({ accessToken: configuration.access_token });
+
+            function showNewImage() {
+                // show loading text
+                $('#yay').attr('src', 'loading.gif').attr('data-filename', 'loading.gif');
+                $('h1').text('Loading...');
+
+                dbx.filesListFolder({path: configuration.dropbox_folder}).then(function(response) {
+
+                    // pick a file at random
+                    var filename = _.sample(response.entries, 1)[0].name;
+
+                    if (!_.isUndefined(filename)) {
+                        dbx.filesGetTemporaryLink({path: configuration.dropbox_folder+'/'+filename}).then(response => {
+                            $('#yay').attr('src', response.link).attr('data-filename', filename);
+                        }).catch(error => {
+                            alert("Couldn't get the image link from dropbox: "+error)
+                        });
+                    } else {
+                        alert("Couldn't find any files in the dropbox folder "+configuration.dropbox_folder)
+                    }
+                }).catch(function(error) {
+                    alert('There was an error getting the list of files from dropbox'+error)
+                });
+
+            }
+            $(document).on("ready", function(evt) {
+                showNewImage();
+                $('button').on('click tap', function(evt) {
+                    var $button = $(evt.target);
+                    if (!$button.attr('disabled')) {
+                        $button.attr('disabled', 'disabled')
+                        showNewImage();
+                    }
+                });
+                $('#yay').on('load', function(evt) {
+                    // load the image and the caption at the same time, instead of caption then waiting for image to load
+                    var filename = evt.currentTarget.getAttribute('data-filename')
+                    if (filename !== 'loading.gif') {
+                        // remove the file extension and set the filename as the caption
+                        $('h1').text(_.initial(filename.split('.')).join('.'))
+                        $('button').removeAttr('disabled')
+                    }
+                })
+
+            });
+        </script>
+    </body>
+</html>
