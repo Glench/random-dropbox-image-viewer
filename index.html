@@ -77,7 +77,8 @@
                         alert("Couldn't find any files in the dropbox folder "+configuration.dropbox_folder)
                     }
                 }).catch(function(error) {
-                    alert('There was an error getting the list of files from dropbox'+error)
+                    console.log(error)
+                    alert('There was an error getting the list of files from dropbox: '+JSON.stringify(error))
                 });
 
             }
